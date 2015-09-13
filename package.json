@@ -16,10 +16,7 @@
   ],
   "author": "Christiaan de Ridder <christiaan@channelengine.com>",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/channelengine/api-client-js/issues"
-  },
-  "homepage": "https://github.com/channelengine/api-client-js#readme",
+  "homepage": "https://www.channelengine.com",
   "devDependencies": {
     "babel": "^5.8.23"
   },
