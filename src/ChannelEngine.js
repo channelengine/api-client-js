@@ -3,17 +3,44 @@ import crypto from 'crypto';
 import moment from 'moment';
 
 export default class ChannelEngine {
-	constructor(tenant, apiKey, apiSecret){
+	constructor(tenant, apiKey, apiSecret, environment){
 		this.tenant = tenant;
 		this.apiKey = apiKey;
 		this.apiSecret = apiSecret;
-		this.baseUri = 'https://' + tenant + '.channelengine.net';
+		
+		this.domain = '.channelengine.net';
+
+		if(environment == 'dev') {
+			this.domain = '.channelengine.local';
+		}else if(environment == 'acc') {
+			this.domain = '.channelengine-acc.nl';
+		}
+
+		this.baseUri = (environment == 'dev' ? 'http://' : 'https://') + tenant + this.domain;
 		this.apiUri = '/api/v1/';
 	}
 
 	getOrders(statuses, callback) {
 		statuses = statuses || [0]; // IN_PROGRESS by default
-		this.makeRequest(this.apiUri + 'orders/', 'GET', {OrderStatus: statuses}, '', callback);
+		this.makeRequest(this.apiUri + 'orders/', 'GET', {orderStatus: statuses}, '', callback);
+	}
+
+	getStatisticsRevenue(dateFrom, dateTo, callback) {
+		dateFrom = dateFrom || moment().subtract(2, 'week');
+		dateTo = dateTo || moment().add(1, 'day');
+		this.makeRequest(this.apiUri + 'statistics/revenue/', 'GET', {fromDate: dateFrom.toISOString(), toDate: dateTo.toISOString()}, '', callback);
+	}
+
+	getStatisticsClickConversion(dateFrom, dateTo, callback) {
+		dateFrom = dateFrom || moment().subtract(2, 'week');
+		dateTo = dateTo || moment().add(1, 'day');
+		this.makeRequest(this.apiUri + 'statistics/clickconversion/', 'GET', {fromDate: dateFrom.toISOString(), toDate: dateTo.toISOString()}, '', callback);
+	}
+
+	getStatisticsOrders(dateFrom, dateTo, callback) {
+		dateFrom = dateFrom || moment().subtract(2, 'week');
+		dateTo = dateTo || moment().add(1, 'day');
+		this.makeRequest(this.apiUri + 'statistics/orders/', 'GET', {fromDate: dateFrom.toISOString(), toDate: dateTo.toISOString()}, '', callback);
 	}
 
 	makeRequest(uri, method, parameters, body, callback) {
@@ -35,6 +62,8 @@ export default class ChannelEngine {
 				callback(res.body)
 			}else{
 				console.log('Request to ' + uri + ' failed: ' + err);
+				console.log(parameters);
+				console.log(body);
 				callback(null);
 			}
 		});
