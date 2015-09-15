@@ -1,10 +1,11 @@
 {
   "name": "@channelengine/api-client",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "ChannelEngine API Client for Javascript",
   "main": "./lib/ChannelEngine.js",
   "scripts": {
-    "prepublish": "./node_modules/.bin/babel -d lib/ src/"
+    "prepublish": "./node_modules/.bin/babel -d lib/ src/",
+    "test": "./node_modules/.bin/babel-node ./tests/tests.js"
   },
   "repository": {
     "type": "git",
