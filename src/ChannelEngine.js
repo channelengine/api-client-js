@@ -25,6 +25,10 @@ export default class ChannelEngine {
 		this.makeRequest(this.apiUri + 'orders/', 'GET', {orderStatus: statuses}, '', callback);
 	}
 
+	getOrder(id, callback) {
+		this.makeRequest(this.apiUri + 'orders/' + id, 'GET', {}, '', callback);
+	}
+
 	getStatisticsRevenue(dateFrom, dateTo, callback) {
 		dateFrom = dateFrom || moment().subtract(2, 'week');
 		dateTo = dateTo || moment().add(1, 'day');
