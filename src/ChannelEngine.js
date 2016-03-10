@@ -29,10 +29,8 @@ export default class ChannelEngine {
 		this.makeRequest(this.apiUri + 'orders/' + id, 'GET', {}, '', callback);
 	}
 
-	getStatisticsRevenue(dateFrom, dateTo, callback) {
-		dateFrom = dateFrom || moment().subtract(2, 'week');
-		dateTo = dateTo || moment().add(1, 'day');
-		this.makeRequest(this.apiUri + 'statistics/revenue/', 'GET', {fromDate: dateFrom.toISOString(), toDate: dateTo.toISOString()}, '', callback);
+	getStatisticsDashboard(period, callback) {
+		this.makeRequest(this.apiUri + 'statistics/dashboard/', 'GET', {period: period}, '', callback);
 	}
 
 	getStatisticsClickConversion(dateFrom, dateTo, callback) {
