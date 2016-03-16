@@ -29,8 +29,12 @@ export default class ChannelEngine {
 		this.makeRequest(this.apiUri + 'orders/' + id, 'GET', {}, '', callback);
 	}
 
-	getStatisticsDashboard(period, callback) {
-		this.makeRequest(this.apiUri + 'statistics/dashboard/', 'GET', {period: period}, '', callback);
+	getChannels(callback) {
+		this.makeRequest(this.apiUri + 'channels/', 'GET', {}, '', callback);
+	}
+
+	getStatisticsDashboard(period, channelId, callback) {
+		this.makeRequest(this.apiUri + 'statistics/dashboard/', 'GET', {period: period, channelId: channelId}, '', callback);
 	}
 
 	getStatisticsClickConversion(dateFrom, dateTo, callback) {
