@@ -1,4 +1,5 @@
-import xhr from 'superagent';
+import fetch from 'isomorphic-fetch';
+import querystring from 'querystring';
 import crypto from 'crypto';
 import moment from 'moment';
 
@@ -20,69 +21,90 @@ export default class ChannelEngine {
 		this.apiUri = '/api/v1/';
 	}
 
-	getOrders(statuses, callback) {
+	getOrders(statuses, dateFrom, dateTo) {
 		statuses = statuses || [0]; // IN_PROGRESS by default
-		this.makeRequest(this.apiUri + 'orders/', 'GET', {orderStatus: statuses}, '', callback);
-	}
-
-	getOrder(id, callback) {
-		this.makeRequest(this.apiUri + 'orders/' + id, 'GET', {}, '', callback);
-	}
-
-	getChannels(callback) {
-		this.makeRequest(this.apiUri + 'channels/', 'GET', {}, '', callback);
-	}
-
-	getStatisticsDashboard(period, channelId, callback) {
-		this.makeRequest(this.apiUri + 'statistics/dashboard/', 'GET', {period: period, channelId: channelId}, '', callback);
-	}
-
-	getStatisticsClickConversion(dateFrom, dateTo, callback) {
 		dateFrom = dateFrom || moment().subtract(2, 'week');
 		dateTo = dateTo || moment().add(1, 'day');
-		this.makeRequest(this.apiUri + 'statistics/clickconversion/', 'GET', {fromDate: dateFrom.toISOString(), toDate: dateTo.toISOString()}, '', callback);
+
+		return this.getRequest('orders', 'GET', {
+			orderStatus: statuses,
+			acknowledge: false,
+			fromDate: dateFrom.toISOString(),
+			toDate: dateTo.toISOString()
+		}).then(this.handleError);
 	}
 
-	getStatisticsOrders(dateFrom, dateTo, callback) {
+	getOrder(id) {
+		return this.getRequest('orders/' + id, 'GET').then(this.handleError);
+	}
+
+	getChannels() {
+		return this.getRequest('channels/', 'GET').then(this.handleError);
+	}
+
+	getStatisticsDashboard(period, channelId) {
+		var qs = { period: period };
+		if(channelId) qs.channelId = channelId;
+
+		return this.getRequest('statistics/dashboard/', 'GET', qs).then(this.handleError);
+	}
+
+	getStatisticsClickConversion(dateFrom, dateTo) {
 		dateFrom = dateFrom || moment().subtract(2, 'week');
 		dateTo = dateTo || moment().add(1, 'day');
-		this.makeRequest(this.apiUri + 'statistics/orders/', 'GET', {fromDate: dateFrom.toISOString(), toDate: dateTo.toISOString()}, '', callback);
+
+		return this.getRequest('statistics/clickconversion/', 'GET', {
+			fromDate: dateFrom.toISOString(),
+			toDate: dateTo.toISOString()
+		}).then(this.handleError);
 	}
 
-	makeRequest(uri, method, parameters, body, callback) {
+	getStatisticsOrders(period, channelId) {
+		var qs = { period: period };
+		if(channelId) qs.channelId = channelId;
+
+		return this.getRequest('statistics/orders/', 'GET', qs).then(this.handleError);
+	}
+
+	getRequest(uri, method, parameters, body) {
+		uri = this.apiUri + uri;
 		var md5 = crypto.createHash('md5');
 		var headers = {};
+		
+		parameters = parameters || {};
+		body = body || null;
+
+		var qs = '?' + querystring.stringify(parameters);
+		var contentHash = body ? md5.update(body).digest('base64') : '';
+		var date = moment().utc();
 
 		headers['Accept'] = 'application/json';
-		headers['X-Date'] = new Date().toUTCString();
-		headers['Content-MD5'] = body ? md5.update(body).digest('base64') : '';
-		headers['Authorization'] = 'HMAC ' + this.apiKey + ':' + this.calculateSignature(uri, method, headers, body);
+		headers['Content-Type'] = 'application/json';
+		headers['Content-MD5'] = contentHash;
+		headers['Authorization'] = 'HMAC ' + this.apiKey + ':' + this.calculateSignature(uri, method, contentHash, body, date);
+		headers['X-Date'] = date.format('ddd, DD MMM YYYY HH:mm:ss') + ' GMT';
 
-		var uri = this.baseUri + uri;
-
-		xhr.get(uri)
-		.query(parameters)
-		.set(headers)
-		.end((err, res) => {
-			if(res.ok) {
-				callback(res.body)
-			}else{
-				console.log('Request to ' + uri + ' failed: ' + err);
-				console.log(parameters);
-				console.log(body);
-				callback(null);
-			}
+		return fetch(this.baseUri + uri + qs, {
+			method: method,
+			body: body,
+			mode: 'cors',
+			headers: headers
 		});
 	}
 
-	calculateSignature(uri, method, headers, content) {
+	handleError(response) {
+		if(!response.ok) throw Error(response.statusText);
+		return response;
+	}
+
+	calculateSignature(uri, method, contentHash, content, date) {
 		var sha = crypto.createHmac('sha256', this.apiSecret);
 
 		var representation = [
-			moment().utc().format('MM/DD/YYYY HH:mm:ss'),
+			date.utc().format('MM/DD/YYYY HH:mm:ss'),
 			method,
 			uri,
-			headers['Content-MD5'],
+			contentHash,
 			this.apiKey
 		].join('\n');
 
