@@ -69,14 +69,16 @@ export default class ChannelEngine {
 	getRequest(uri, method, parameters, body) {
 		uri = this.apiUri + uri;
 		var md5 = crypto.createHash('md5');
+		var date = moment().utc();
 		var headers = {};
 		
 		parameters = parameters || {};
+		parameters['_noCache'] = date.unix();
 		body = body || null;
 
 		var qs = '?' + querystring.stringify(parameters);
 		var contentHash = body ? md5.update(body).digest('base64') : '';
-		var date = moment().utc();
+		
 
 		headers['Accept'] = 'application/json';
 		headers['Content-Type'] = 'application/json';
