@@ -49,6 +49,10 @@ export default class ChannelEngine {
 		return this.getRequest('statistics/dashboard/', 'GET', qs).then(this.handleError);
 	}
 
+	getStatisticsApp(period) {
+		return this.getRequest('statistics/app/', 'GET', { period: period }).then(this.handleError);
+	}
+
 	getStatisticsClickConversion(dateFrom, dateTo) {
 		dateFrom = dateFrom || moment().subtract(2, 'week');
 		dateTo = dateTo || moment().add(1, 'day');
